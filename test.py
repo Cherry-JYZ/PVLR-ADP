@@ -171,15 +171,12 @@ def main():
         fb_iou,  miou,  piou= validate(val_loader, model, val_seed,args.split)
         FBIoU_array[val_id], mIoU_array[val_id], pIoU_array[val_id] = \
             fb_iou, miou,  piou
-            
-    # 保存 BLIP2 生成的文本日志           
+                    
     if args.save_blip2_text:
         if hasattr(model, 'module'):
-            # 如果使用了 DistributedDataParallel
             if hasattr(model.module, 'save_text_log'):
                 model.module.save_text_log()
         else:
-            # 如果没有使用 DistributedDataParallel
             if hasattr(model, 'save_text_log'):
                 model.save_text_log()                  
 
@@ -254,7 +251,6 @@ def validate(val_loader, model, val_seed,split):
             ori_label = ori_label.cuda(non_blocking=True)
             # proto_dict =torch.load("/workspace/exp/res50_kshot/split2/res50_12_10_copy/snapshotproto_dict.pth")
             
-            # --- 强制 resize 到训练时的尺寸，避免 MoE_Fusion 特征对不齐 ---
             train_h, train_w = args.train_h, args.train_w
             if input.size(2) != train_h or input.size(3) != train_w:
                 input = F.interpolate(input, size=(train_h, train_w), mode='bilinear', align_corners=True)
@@ -290,7 +286,7 @@ def validate(val_loader, model, val_seed,split):
 
             model_time.update(time.time() - start_time)
 
-            if args.ori_resize:  # 真值转化为方形
+            if args.ori_resize: 
                 longerside = max(ori_label.size(1), ori_label.size(2))
                 backmask = torch.ones(ori_label.size(0), longerside, longerside, device='cuda') * 255
                 backmask[0, :ori_label.size(1), :ori_label.size(2)] = ori_label
