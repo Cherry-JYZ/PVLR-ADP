@@ -18,7 +18,7 @@ class PrototypeContrastLoss(nn.Module, ABC):
         super(PrototypeContrastLoss, self).__init__()
 
     def _class_construct(self, pros, labels_):  # 0,0,0,1,2,3,4
-        unique_labels = torch.unique(labels_)  # 得到bs个的标签类别 0,1,2,3,4
+        unique_labels = torch.unique(labels_)  
         for i in range(len(pros)):
             pros[i]=pros[i].unsqueeze(1)    #8,1,256,1,1
         pros = torch.cat(pros,dim=1) # bs,k,c,1,1
@@ -28,14 +28,10 @@ class PrototypeContrastLoss(nn.Module, ABC):
         #     index = torch.where(labels_ == unique_labels[i])    #
 
         #     pro_dict[unique_labels[i].item()] = pros[index].contiguous().view(-1, 2048)  # {0:Tensor(1,256),1:,,,,2:,,,}
-        # 动态根据通道数处理，兼容不同骨干（如 ResNet=2048, VGG=512 等）
         for i in range(len(unique_labels)):
             label = unique_labels[i]
-            # 获取属于该类的样本索引（一维索引）
             idx = (labels_ == label).nonzero(as_tuple=True)[0]
-            # 选取对应的原型，shape -> (n_samples, C, 1, 1)
             selected = pros[idx]
-            # 展平为 (n_samples, C)
             proto = selected.contiguous().view(selected.size(0), -1)
             pro_dict[label.item()] = proto
 
@@ -44,7 +40,7 @@ class PrototypeContrastLoss(nn.Module, ABC):
 
     def forward(self, s_fp_list, s_bp_list, classes, proto_dict,bp_proto_dict):
         # q_fp:bs*c*1*1 , s_fp_list:5*bs*c*1*1, classes:(k,k,k),  proto_dict:dict()
-        classes = torch.cat(classes,0).clone() #将(bs,k)展开成1纬bs*k的张量
+        classes = torch.cat(classes,0).clone() 
 
         class_dict = self._class_construct(s_fp_list, classes)
         class_bp_dict = self._class_construct(s_bp_list, classes)
