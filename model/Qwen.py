@@ -1,15 +1,9 @@
 import torch
 from transformers import AutoModelForImageTextToText, AutoProcessor
 
-# =========================
-# 1. 路径配置（按你现在的环境）
-# =========================
 MODEL_PATH = "/home/jiayingzi/DMNet/model/Qwen3-VL-2B-Instruct"
 IMAGE_PATH = "/home/jiayingzi/DMNet/2.jpg"
 
-# =========================
-# 2. 加载模型 & 处理器
-# =========================
 model = AutoModelForImageTextToText.from_pretrained(
     MODEL_PATH,
     dtype="auto",
@@ -23,9 +17,6 @@ processor = AutoProcessor.from_pretrained(
     trust_remote_code=True
 )
 
-# =========================
-# 3. 分割友好的空间关系 Prompt
-# =========================
 # prompt = """Focus on spatial layout for image segmentation.
 # For each visible object, describe:
 # - category
@@ -54,9 +45,6 @@ messages = [
     }
 ]
 
-# =========================
-# 4. 构建模型输入
-# =========================
 inputs = processor.apply_chat_template(
     messages,
     tokenize=True,
@@ -66,19 +54,15 @@ inputs = processor.apply_chat_template(
 )
 inputs = inputs.to(model.device)
 
-# =========================
-# 5. 推理（低 token + 稳定）
-# =========================
+
 with torch.no_grad():
     generated_ids = model.generate(
         **inputs,
-        max_new_tokens=32,     # 分割任务不需要长文本
-        do_sample=False       # 关闭采样，更稳定
+        max_new_tokens=32,   
+        do_sample=False      
     )
 
-# =========================
-# 6. 解码输出
-# =========================
+
 generated_ids_trimmed = [
     out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
 ]
